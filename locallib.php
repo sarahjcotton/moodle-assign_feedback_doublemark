@@ -157,7 +157,7 @@ class assign_feedback_doublemark extends assign_feedback_plugin {
             // Get the header.
             $elements0 = array_splice($mform->_elements, 0, 1);
             // Get the double marks elements.
-            $elements1 = array_splice($mform->_elements, 3);
+            $elements1 = array_splice($mform->_elements, 2);
             // Reconstruct elements.
             $mform->_elements = array_merge($elements0, $elements1, $mform->_elements);
 
@@ -179,17 +179,21 @@ class assign_feedback_doublemark extends assign_feedback_plugin {
             </script>');
             // Might be "false" if the double marks record doesn't exist. In which case, there's no need to disable.
             if ($doublemarks) {
-                if ($doublemarks->first_grade != '-1') {
-                    $mform->disabledIf('assignfeedback_doublemark_first_grade', 'grader1_hidden', 'neq', $USER->id);
-                    $mform->disabledIf('assignfeedback_doublemark_second_grade', 'grader1_hidden', 'eq', $USER->id);
+                // If the first grader has added a grade, hide the second grade field, unless admin.
+                if ($doublemarks->first_grade != '-1' && $doublemarks->second_grade == '-1' && !is_siteadmin()) {
+                    $mform->hideIf('assignfeedback_doublemark_first_grade', 'grader1_hidden', 'neq', $USER->id);
+                    $mform->hideIf('assignfeedback_doublemark_second_grade', 'grader1_hidden', 'eq', $USER->id);
                 }
-                if ($doublemarks->second_grade != '-1') {
-                    $mform->disabledIf('assignfeedback_doublemark_second_grade', 'grader2_hidden', 'neq', $USER->id);
-                    $mform->disabledIf('assignfeedback_doublemark_first_grade', 'grader2_hidden', 'eq', $USER->id);
+                if ($doublemarks->second_grade != '-1' && $doublemarks->first_grade == '-1' && !is_siteadmin()) {
+                    $mform->hideIf('assignfeedback_doublemark_first_grade', 'grader2_hidden', 'eq', $USER->id);
+                    $mform->hideIf('assignfeedback_doublemark_second_grade', 'grader2_hidden', 'neq', $USER->id);
+                }
+                if ($doublemarks->first_grade != '-1' && $doublemarks->second_grade != '-1' && !is_siteadmin()) {
+                    $mform->disabledIf('assignfeedback_doublemark_first_grade', 'grader2_hidden', 'neq', -1);
+                    $mform->disabledIf('assignfeedback_doublemark_second_grade', 'grader1_hidden', 'neq', -1);
                 }
             }
         } else {
-            $mform->addElement('html', get_string('not_available', 'assignfeedback_doublemark'));
             // Re-arrange form elements so double marking comes first
             // Get the header.
             $elements0 = array_splice($mform->_elements, 0, 1);
